@@ -12,10 +12,10 @@ rules:
     names:
       - login.example.com
       - "*.lobby.example.com"
-    answer: "192.0.2.10"
+    answer: "${EXAMPLE_GAME_IP}"
 
   # Optional: send matching queries to a different DNS resolver.
   # - service: example-forwarder
   #   names:
   #     - "*.auth.example.com"
-  #   forward: "192.0.2.54"
+  #   forward: "${EXAMPLE_FORWARDER_ADDR}"

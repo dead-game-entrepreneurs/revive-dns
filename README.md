@@ -16,8 +16,9 @@ cp config.example.yaml config.yaml
 
 1. In `.env`, set `DNS_LISTEN_IP` to the LAN IP of the machine running
    revive-dns. Set `DNS_ALLOW_CIDR` to the subnet your consoles or emulators
-   connect from.
-2. In `config.yaml`, replace the example names and address with your own (see below).
+   connect from and `EXAMPLE_GAME_IP` to the IPv4 address of your game server.
+2. In `config.yaml`, replace the example hostnames with the names your game
+   looks up.
 3. Build and start the resolver.
 
    ```sh
@@ -31,15 +32,21 @@ listens on UDP and TCP port 53, which must be free on that address. The
 
 ## Add a game
 
-Add another list item under `rules:` in `config.yaml`. Use the hostnames the
-game actually looks up and an IPv4 address it can reach.
+Add a variable to `.env` with the game server's reachable IPv4 address.
+
+```dotenv
+MY_GAME_IP=192.0.2.10
+```
+
+Add another list item under `rules:` in `config.yaml`. List the hostnames
+the game looks up and reference the variable in `answer`.
 
 ```yaml
   - service: my-game
     names:
       - login.example.com
       - "*.lobby.example.com"
-    answer: "192.0.2.10"
+    answer: "${MY_GAME_IP}"
 ```
 
 - `service` is the label shown in logs.
@@ -48,17 +55,26 @@ game actually looks up and an IPv4 address it can reach.
 - `answer` returns an IPv4 address for A queries. Other record types get an
   empty reply.
 
+Compose passes `.env` to the container, and revive-dns expands the variables
+when it reads `config.yaml`.
+
 To send matching queries to another resolver, use `forward` in place of
-`answer`. The forwarding port defaults to 53. Unmatched queries go to
-`DNS_UPSTREAM`. Leave it blank to refuse unmatched queries, and keep the allow
-list scoped to your clients when using an upstream.
+`answer` and add the resolver address to `.env`. The forwarding port defaults
+to 53.
+
+```dotenv
+MY_FORWARDER_ADDR=192.0.2.54
+```
 
 ```yaml
   - service: my-forwarder
     names:
       - "*.auth.example.com"
-    forward: "192.0.2.54"
+    forward: "${MY_FORWARDER_ADDR}"
 ```
+
+Unmatched queries go to `DNS_UPSTREAM`. Leave it blank to refuse unmatched
+queries, and keep the allow list scoped to your clients when using an upstream.
 
 Validate the file and apply the changes from the repo directory.
 
