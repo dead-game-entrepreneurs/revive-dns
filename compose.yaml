@@ -1,0 +1,20 @@
+# revive-dns: one DNS server for every revival service on this host.
+#
+# Host networking so it can answer on the LAN IP and see real client addresses.
+# Port 53 needs root in the container; every capability except binding low
+# ports is dropped and the filesystem is read-only.
+name: revive-dns
+
+services:
+  dns:
+    build: .
+    image: revive-dns:local
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    volumes:
+      - ./config.yaml:/config.yaml:ro
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
